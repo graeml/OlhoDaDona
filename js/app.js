@@ -1,128 +1,188 @@
 /* ==========================================================
    Olho da Dona
    app.js
-
-   Responsável por:
-   - registrar Service Worker
-   - guardar token do cliente
-   - carregar Portal dentro do aplicativo
    ========================================================== */
-
-
-
-/*
-==============================================================
-URL da implantação do Apps Script
-==============================================================
-Substitua pela URL real do seu Web App.
-Não coloque ?t= no final.
-*/
 
 const URL_PORTAL =
 "https://script.google.com/macros/s/AKfycbyMMh5ZrxQoWjLnIDp1qKQOo-3T0UkcGQf9lQ0py7rY7LxuwsEH4LAWvVcJfXvC8zXYCw/exec";
 
+/* ==========================================================
+   Elementos
+   ========================================================== */
 
+const splash = document.getElementById("splash");
+const portal = document.getElementById("portal");
+const boasVindas = document.getElementById("boasVindas");
+const textoBoasVindas = document.getElementById("textoBoasVindas");
+const continuar = document.getElementById("continuar");
+const botaoInstalar = document.getElementById("instalar");
 
-/*
-==============================================================
-Elementos da interface
-==============================================================
-*/
+/* ==========================================================
+   Captura token recebido
+   ========================================================== */
 
-const splash =
-document.getElementById("splash");
+const parametros = new URLSearchParams(window.location.search);
 
+const tokenRecebido = parametros.get("t");
 
-const portal =
-document.getElementById("portal");
+if (tokenRecebido) {
+    localStorage.setItem("tokenCliente", tokenRecebido);
+}
 
+const token = localStorage.getItem("tokenCliente");
 
+/* ==========================================================
+   Detecta navegador
+   ========================================================== */
 
-/*
-==============================================================
-Captura token recebido pelo link
-==============================================================
+const ua = navigator.userAgent;
 
-Exemplo:
+let navegador = "Outro";
 
-...?t=ABC123
+if (/Edg/i.test(ua))
+    navegador = "Edge";
+else if (/Chrome/i.test(ua))
+    navegador = "Chrome";
+else if (/Firefox/i.test(ua))
+    navegador = "Firefox";
+else if (/Safari/i.test(ua))
+    navegador = "Safari";
 
-==============================================================
-*/
+/* ==========================================================
+   Service Worker
+   ========================================================== */
 
-const parametros =
-new URLSearchParams(
-    window.location.search
-);
+if ("serviceWorker" in navigator) {
 
+    navigator.serviceWorker
+        .register("service-worker.js")
+        .catch(console.error);
 
-const tokenRecebido =
-parametros.get("t");
+}
 
+/* ==========================================================
+   Instalação
+   ========================================================== */
 
+let eventoInstalacao = null;
 
-if(tokenRecebido){
+window.addEventListener("beforeinstallprompt", function(e){
+
+    e.preventDefault();
+
+    eventoInstalacao = e;
+
+    botaoInstalar.style.display = "block";
+
+});
+
+botaoInstalar.onclick = async function(){
+
+    if(!eventoInstalacao)
+        return;
+
+    eventoInstalacao.prompt();
+
+    await eventoInstalacao.userChoice;
+
+    botaoInstalar.style.display="none";
+
+    eventoInstalacao = null;
+
+};
+
+/* ==========================================================
+   Boas-vindas
+   ========================================================== */
+
+function mostrarBoasVindas(){
+
+    let texto = "";
+
+    switch(navegador){
+
+        case "Chrome":
+        case "Edge":
+
+            texto =
+            `
+            Este aplicativo pode ser instalado na tela inicial.
+
+            Procure pelo botão <b>Instalar aplicativo</b> na barra
+            de endereços do navegador ou utilize o botão abaixo,
+            quando disponível.
+            `;
+
+            break;
+
+        case "Safari":
+
+            texto =
+            `
+            Para instalar:
+
+            Compartilhar →
+            Adicionar à Tela de Início.
+            `;
+
+            break;
+
+        case "Firefox":
+
+            texto =
+            `
+            O Firefox possui suporte limitado para instalação.
+
+            Recomendamos utilizar o Google Chrome para instalar
+            o aplicativo.
+            `;
+
+            break;
+
+        default:
+
+            texto =
+            `
+            Você pode instalar este aplicativo na tela inicial
+            do seu dispositivo.
+            `;
+
+    }
+
+    textoBoasVindas.innerHTML = texto;
+
+    boasVindas.style.display="flex";
+
+}
+
+continuar.onclick = function(){
 
     localStorage.setItem(
-        "tokenCliente",
-        tokenRecebido
+        "tutorialVisto",
+        "SIM"
     );
 
-}
+    boasVindas.style.display="none";
 
+    abrirPortal();
 
+};
 
-/*
-==============================================================
-Recupera token salvo
-==============================================================
-*/
-
-const token =
-localStorage.getItem(
-    "tokenCliente"
-);
-
-
-
-/*
-==============================================================
-Registra Service Worker
-==============================================================
-*/
-
-if(
-    "serviceWorker" in navigator
-){
-
-    navigator.serviceWorker.register(
-        "service-worker.js"
-    );
-
-}
-
-
-
-/*
-==============================================================
-Carrega o portal
-==============================================================
-*/
+/* ==========================================================
+   Portal
+   ========================================================== */
 
 function abrirPortal(){
 
-
     if(!token){
 
-        splash.innerHTML =
+        splash.innerHTML=
         `
-        <h1>
-        Olho da Dona
-        </h1>
+        <h2>Olho da Dona</h2>
 
         <p>
-        Este aplicativo ainda não está vinculado
-        a um imóvel.
+        Este aplicativo ainda não foi vinculado
+        a um cliente.
         </p>
         `;
 
@@ -130,104 +190,44 @@ function abrirPortal(){
 
     }
 
-
-
     portal.src =
-        URL_PORTAL +
-        "?t=" +
-        token;
+        URL_PORTAL + "?t=" + token;
 
-
-
-    portal.onload =
-    function(){
-
+    portal.onload = function(){
 
         splash.style.opacity="0";
 
-
         setTimeout(function(){
-
 
             splash.style.display="none";
 
-
             portal.style.display="block";
 
-
-        },500);
-
+        },400);
 
     };
-
 
 }
 
-
-
-/*
-==============================================================
-Inicialização
-==============================================================
-*/
-
-setTimeout(
-    abrirPortal,
-    1200
-);
-
 /* ==========================================================
-   Instalação do aplicativo
+   Inicialização
    ========================================================== */
 
+setTimeout(function(){
 
-let eventoInstalacao;
+    if(
+        localStorage.getItem("tutorialVisto")
+        !== "SIM"
+    ){
 
+        splash.style.display="none";
 
-window.addEventListener(
-"beforeinstallprompt",
-function(event){
+        mostrarBoasVindas();
 
+        return;
 
-    event.preventDefault();
+    }
 
+    abrirPortal();
 
-    eventoInstalacao = event;
-
-
-    const botao =
-    document.getElementById(
-        "instalar"
-    );
-
-
-    botao.style.display =
-    "block";
-
-
-    botao.onclick =
-    function(){
-
-
-        eventoInstalacao.prompt();
-
-
-        eventoInstalacao
-        .userChoice
-        .then(function(){
-
-
-            eventoInstalacao = null;
-
-
-            botao.style.display =
-            "none";
-
-
-        });
-
-
-    };
-
-
-});
+},1200);
