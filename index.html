@@ -26,7 +26,7 @@
 
 <body>
 
-<!-- Tela inicial -->
+<!-- Splash -->
 
 <div id="splash">
 
@@ -44,17 +44,51 @@
 
 </div>
 
-<!-- Portal do cliente -->
+
+<!-- Tela de Boas-vindas -->
+
+<div id="boasVindas" style="display:none;">
+
+    <div class="boasConteudo">
+
+        <img
+            src="icons/icon-192.png"
+            class="logo">
+
+        <h2>
+            Bem-vindo!
+        </h2>
+
+        <p id="textoBoasVindas">
+
+        </p>
+
+        <button id="continuar">
+            Continuar
+        </button>
+
+    </div>
+
+</div>
+
+
+<!-- Portal -->
 
 <iframe
     id="portal"
-    frameborder="0">
+    frameborder="0"
+    style="display:none;">
 </iframe>
 
-<button id="instalar"
-        style="display:none;">
+
+<!-- Botão de instalação (quando suportado pelo navegador) -->
+
+<button
+    id="instalar"
+    style="display:none;">
     📲 Instalar Olho da Dona
 </button>
+
 
 <script src="js/app.js"></script>
 
