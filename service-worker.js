@@ -7,7 +7,7 @@
 
 
 const CACHE_NAME =
-"olho-da-dona-v1";
+"olho-da-dona-v3";
 
 
 
@@ -26,6 +26,8 @@ const ARQUIVOS_BASE = [
     "./icons/icon-192.png",
 
     "./icons/icon-512.png"
+
+"./service-worker.js"
 
 ];
 
